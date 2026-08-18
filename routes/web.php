@@ -10,6 +10,9 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\PromotionMediaController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\Helpdesk\HelpdeskDashboardController;
+use App\Http\Controllers\Helpdesk\DepartmentController;
+use App\Http\Controllers\Helpdesk\ConversationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,5 +66,26 @@ Route::middleware(['auth'])->group(
 
         Route::resource('admin', AdminController::class);
         Route::get('/admins/data', [AdminController::class, 'data']);
+
+        // -------------------------------------------------------
+        // Hotel Helpdesk Module
+        // -------------------------------------------------------
+        Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
+
+            // Helpdesk Dashboard
+            Route::get('/', [HelpdeskDashboardController::class, 'index'])->name('dashboard');
+
+            // Departments
+            Route::get('/departments/data', [DepartmentController::class, 'data'])->name('departments.data');
+            Route::resource('departments', DepartmentController::class);
+
+            // Conversations
+            Route::get('/conversations/data', [ConversationController::class, 'data'])->name('conversations.data');
+            Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+            Route::get('/conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
+            Route::post('/conversations/{id}/reply', [ConversationController::class, 'reply'])->name('conversations.reply');
+            Route::patch('/conversations/{id}/close', [ConversationController::class, 'close'])->name('conversations.close');
+            Route::patch('/conversations/{id}/reopen', [ConversationController::class, 'reopen'])->name('conversations.reopen');
+        });
     }
 );

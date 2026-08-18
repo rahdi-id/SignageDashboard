@@ -76,10 +76,28 @@
                         if (promotionMedia.type == 'Image') {
                             var url = "{{ asset('images/:image') }}";
                             url = url.replace(':image', promotionMedia.name);
-                            return "<img width='150px' alt='image' src='" + url + "'>"
-                        } else{
-                            return '';
+                            return "<img width='150px' alt='image' src='" + url + "'>";
+                        } else if (promotionMedia.url_youtube) {
+                            // Extract YouTube video ID from any YouTube URL format
+                            var videoId = extractYoutubeId(promotionMedia.url_youtube);
+                            if (videoId) {
+                                var thumb = "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
+                                var embedUrl = "https://www.youtube.com/embed/" + videoId;
+                                return "<a href='" + embedUrl + "' target='_blank'>" +
+                                       "<img width='150px' alt='YouTube' src='" + thumb + "' " +
+                                       "style='border-radius:4px;cursor:pointer;'>" +
+                                       "<br><small class='text-danger'><i class='fab fa-youtube'></i> YouTube</small>" +
+                                       "</a>";
+                            }
+                            return "<span class='text-muted'>Invalid URL</span>";
+                        } else if (promotionMedia.name) {
+                            var videoUrl = "{{ asset('videos/:video') }}";
+                            videoUrl = videoUrl.replace(':video', promotionMedia.name);
+                            return "<video width='150px' controls>" +
+                                   "<source src='" + videoUrl + "'>" +
+                                   "</video>";
                         }
+                        return '';
                     }
                 },
                 {
@@ -109,5 +127,27 @@
             url = url.replace(':mediaId', data['id'])
             $("#deleteForm").attr("action", url)
         });
+
+        /**
+         * Extract YouTube video ID from various URL formats:
+         * - https://youtu.be/VIDEO_ID
+         * - https://youtu.be/VIDEO_ID?si=xxx
+         * - https://www.youtube.com/watch?v=VIDEO_ID
+         * - https://www.youtube.com/watch?v=VIDEO_ID&feature=xxx
+         */
+        function extractYoutubeId(url) {
+            if (!url) return null;
+            var patterns = [
+                /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+                /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+                /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+                /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+            ];
+            for (var i = 0; i < patterns.length; i++) {
+                var match = url.match(patterns[i]);
+                if (match) return match[1];
+            }
+            return null;
+        }
     </script>
 @endsection

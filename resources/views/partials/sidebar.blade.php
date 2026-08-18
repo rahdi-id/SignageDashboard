@@ -31,6 +31,27 @@
                         class="fas fa-users-cog"></i>
                     <span>Administrator</span></a>
             </li>
+
+            {{-- Hotel Helpdesk --}}
+            <li class="menu-header">Hotel Helpdesk</li>
+            <li class="{{ Route::is('helpdesk.dashboard') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('helpdesk.dashboard') }}">
+                    <i class="fas fa-headset"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('helpdesk.conversations.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('helpdesk.conversations.index') }}">
+                    <i class="fas fa-comments"></i>
+                    <span>Conversations</span>
+                </a>
+            </li>
+            <li class="{{ Route::is('helpdesk.departments.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('helpdesk.departments.index') }}">
+                    <i class="fas fa-building"></i>
+                    <span>Departments</span>
+                </a>
+            </li>
         </ul>
     </aside>
 </div>

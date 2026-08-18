@@ -46,10 +46,13 @@ class PromotionMediaController extends Controller
         if ($request->youtube) {
             foreach ($request->youtube as $youtube) {
                 $promotionMedia = new PromotionMedia();
+
                 $promotionMedia->promotion_id = $id;
+                $promotionMedia->name = 'youtube';
                 $promotionMedia->title = "Youtube Video";
                 $promotionMedia->type = 'Video';
                 $promotionMedia->url_youtube = $youtube;
+
                 $promotionMedia->save();
             }
         }
