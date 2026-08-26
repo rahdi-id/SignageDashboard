@@ -13,7 +13,9 @@ class Conversation extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'department_id' => 'integer',
+        'department_id'       => 'integer',
+        'guest_last_seen_at'  => 'datetime',
+        'admin_last_seen_at'  => 'datetime',
     ];
 
     /**

@@ -39,7 +39,7 @@
                                 <th>Name</th>
                                 <th>Slug</th>
                                 <th>Description</th>
-                                <th>Tickets</th>
+                                <th>Chats</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>

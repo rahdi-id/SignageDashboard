@@ -3,7 +3,7 @@
 @section('content')
 <section class="section">
     <div class="section-header">
-        <h1>Helpdesk Dashboard</h1>
+        <h1>Live Chat Dashboard</h1>
         <div class="section-header-breadcrumb">
             <div class="breadcrumb-item active"><a href="{{ route('dashboard') }}">Dashboard</a></div>
             <div class="breadcrumb-item">Hotel Helpdesk</div>
@@ -15,13 +15,13 @@
         <div class="col-lg-3 col-md-6 col-sm-6 col-12">
             <div class="card card-statistic-1">
                 <div class="card-icon bg-primary">
-                    <i class="fas fa-ticket-alt"></i>
+                    <i class="fas fa-comments"></i>
                 </div>
                 <div class="card-wrap">
                     <div class="card-header">
-                        <h4>Open Tickets</h4>
+                        <h4>Open Chat</h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="stat-open">
                         {{ $totalOpen }}
                     </div>
                 </div>
@@ -36,7 +36,7 @@
                     <div class="card-header">
                         <h4>In Progress</h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="stat-inprogress">
                         {{ $totalInProgress }}
                     </div>
                 </div>
@@ -49,9 +49,9 @@
                 </div>
                 <div class="card-wrap">
                     <div class="card-header">
-                        <h4>Closed Tickets</h4>
+                        <h4>Closed Chat</h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="stat-closed">
                         {{ $totalClosed }}
                     </div>
                 </div>
@@ -64,9 +64,9 @@
                 </div>
                 <div class="card-wrap">
                     <div class="card-header">
-                        <h4>Tickets Today</h4>
+                        <h4>Chat Today</h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="stat-today">
                         {{ $totalToday }}
                     </div>
                 </div>
@@ -75,14 +75,14 @@
     </div>
 
     <div class="row">
-        {{-- Tickets by Department --}}
+        {{-- Chat by Department --}}
         <div class="col-lg-5 col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h4>Tickets by Department</h4>
+                    <h4>Chat by Department</h4>
                 </div>
                 <div class="card-body">
-                    @forelse($ticketByDepartment as $dept)
+                    @forelse($chatByDepartment as $dept)
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1">
                             <span>{{ $dept->name }}</span>
@@ -119,7 +119,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped mb-0">
+                        <table class="table table-striped mb-0" id="recent-table">
                             <thead>
                                 <tr>
                                     <th>Guest</th>
@@ -130,35 +130,8 @@
                                     <th>Created</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse($recentConversations as $conv)
-                                <tr>
-                                    <td>
-                                        <a href="{{ route('helpdesk.conversations.show', $conv->id) }}">
-                                            {{ $conv->guest_name }}
-                                        </a>
-                                    </td>
-                                    <td>{{ $conv->room_number }}</td>
-                                    <td>{{ $conv->department->name ?? '-' }}</td>
-                                    <td>
-                                        @php $sc = \App\Models\Conversation::STATUS_COLORS[$conv->status] ?? 'secondary'; @endphp
-                                        <span class="badge badge-{{ $sc }}">
-                                            {{ \App\Models\Conversation::STATUS_LABELS[$conv->status] ?? $conv->status }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @php $pc = \App\Models\Conversation::PRIORITY_COLORS[$conv->priority] ?? 'secondary'; @endphp
-                                        <span class="badge badge-{{ $pc }}">
-                                            {{ \App\Models\Conversation::PRIORITY_LABELS[$conv->priority] ?? $conv->priority }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $conv->created_at->format('d M Y H:i') }}</td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">No conversations yet.</td>
-                                </tr>
-                                @endforelse
+                            <tbody id="recent-tbody">
+                                {{-- Diisi oleh DataTables via loadDashboard() --}}
                             </tbody>
                         </table>
                     </div>
@@ -167,4 +140,154 @@
         </div>
     </div>
 </section>
+@endsection
+
+@section('js')
+<script>
+(function () {
+    'use strict';
+
+    // ── Konstanta warna/label ─────────────────────────────────────────────────
+    var statusColors   = { open: 'primary', in_progress: 'warning', closed: 'success' };
+    var statusLabels   = { open: 'Open',    in_progress: 'In Progress', closed: 'Closed' };
+    var priorityColors = { low: 'secondary', medium: 'info', high: 'danger' };
+    var priorityLabels = { low: 'Low',       medium: 'Medium', high: 'High' };
+
+    // ── State tracking ───────────────────────────────────────────────────────
+    var lastKnownTopId       = {{ $recentConversations->isNotEmpty() ? $recentConversations->first()->id : 0 }};
+    var lastKnownTotalUnread = 0;
+    var isFirstLoad          = true;
+
+    // ── Notification sound ────────────────────────────────────────────────────
+    var _audioCtx = null;
+
+    function playDashboardNotification() {
+        try {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (_audioCtx.state === 'suspended') _audioCtx.resume();
+            var osc  = _audioCtx.createOscillator();
+            var gain = _audioCtx.createGain();
+            osc.connect(gain); gain.connect(_audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, _audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(660, _audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.35, _audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + 0.35);
+            osc.start(_audioCtx.currentTime);
+            osc.stop(_audioCtx.currentTime + 0.35);
+        } catch (e) {}
+    }
+
+    (function () {
+        function tryUnlock() {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (_audioCtx.state === 'suspended') _audioCtx.resume();
+            document.removeEventListener('click',   tryUnlock);
+            document.removeEventListener('keydown', tryUnlock);
+        }
+        document.addEventListener('click',   tryUnlock);
+        document.addEventListener('keydown', tryUnlock);
+    }());
+
+    // ── DataTables instance untuk Recent Conversations ────────────────────────
+    var recentTable;
+
+    function initRecentTable() {
+        recentTable = $('#recent-table').DataTable({
+            data:        [],  // diisi via loadDashboard()
+            columns: [
+                // Guest + unread badge
+                {
+                    data: null,
+                    render: function (d) {
+                        var unread  = d.unread_count || 0;
+                        var badge   = unread > 0
+                            ? '<span class="badge badge-danger ml-1" title="' + unread + ' unread">' + unread + '</span>'
+                            : '';
+                        var weight  = unread > 0 ? ' style="font-weight:600"' : '';
+                        return '<a href="{{ url("/helpdesk/conversations") }}/' + d.id + '"' + weight + '>'
+                             + $('<span>').text(d.guest_name).html() + '</a>' + badge;
+                    }
+                },
+                { data: 'room_number' },
+                { data: 'department' },
+                {
+                    data: 'status',
+                    render: function (d) {
+                        var sc = statusColors[d] || 'secondary';
+                        return '<span class="badge badge-' + sc + '">' + (statusLabels[d] || d) + '</span>';
+                    }
+                },
+                {
+                    data: 'priority',
+                    render: function (d) {
+                        var pc = priorityColors[d] || 'secondary';
+                        return '<span class="badge badge-' + pc + '">' + (priorityLabels[d] || d) + '</span>';
+                    }
+                },
+                { data: 'created_at' }
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50],
+            order:      [[5, 'desc']],
+            responsive: true,
+            searching:  false,   // dashboard tidak perlu search bar
+            language: {
+                processing:  'Loading...',
+                emptyTable:  'No recent conversations.',
+                info:        'Showing _START_ to _END_ of _TOTAL_ conversations',
+                infoEmpty:   'No conversations',
+                lengthMenu:  'Show _MENU_ entries',
+                paginate: {
+                    next:     'Next',
+                    previous: 'Previous'
+                }
+            }
+        });
+    }
+
+    // ── loadDashboard() ───────────────────────────────────────────────────────
+    function loadDashboard() {
+        $.get('{{ route("helpdesk.stats") }}', function (data) {
+
+            // Update stat cards
+            $('#stat-open').text(data.totalOpen);
+            $('#stat-inprogress').text(data.totalInProgress);
+            $('#stat-closed').text(data.totalClosed);
+            $('#stat-today').text(data.totalToday);
+
+            var conversations = data.recentConversations;
+
+            // Deteksi notifikasi
+            var newTopId       = conversations.length > 0 ? conversations[0].id : lastKnownTopId;
+            var newTotalUnread = 0;
+            $.each(conversations, function (i, c) { newTotalUnread += (c.unread_count || 0); });
+
+            if (!isFirstLoad) {
+                if (newTopId > lastKnownTopId || newTotalUnread > lastKnownTotalUnread) {
+                    playDashboardNotification();
+                }
+            }
+            lastKnownTopId       = newTopId;
+            lastKnownTotalUnread = newTotalUnread;
+            isFirstLoad          = false;
+
+            // Update DataTables — draw(false) mempertahankan current page
+            recentTable.clear().rows.add(conversations).draw(false);
+        });
+    }
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+    $(document).ready(function () {
+        initRecentTable();
+
+        // Load pertama
+        loadDashboard();
+
+        // Auto-refresh setiap 10 detik — current page dipertahankan oleh draw(false)
+        setInterval(loadDashboard, 10000);
+    });
+
+}());
+</script>
 @endsection

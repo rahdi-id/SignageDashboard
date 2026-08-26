@@ -36,7 +36,7 @@
  * 	  1.31 Weather Icon
  * 	  1.32 PWStrength
  * 	  1.33 Product
- * 	  1.34 Ticket
+ * 	  1.34 Chat
  * 	  1.35 Owl Carousel
  * 	  1.36 Activities
  * 	  1.37 Invoices
@@ -343,6 +343,8 @@ table.dataTable {
     padding: 0 !important;
     margin: 0 !important;
     float: left; }
+  .dataTables_wrapper .dataTables_length select {
+    min-width: 65px; }
 
 div.dataTables_wrapper div.dataTables_processing {
   font-size: 0 !important;
@@ -1206,126 +1208,126 @@ tr:first-child > td > .fc-day-grid-event {
       padding-left: 15px;
       padding-right: 15px; }
 
-/* 1.34 Ticket */
-.tickets-list .ticket-item {
+/* 1.34 Chat */
+.chats-list .chat-item {
   text-decoration: none;
   display: inline-block;
   width: 100%;
   padding: 20px;
   border-bottom: 1px solid #f9f9f9; }
-  .tickets-list .ticket-item.ticket-more {
+  .chats-list .chat-item.chat-more {
     padding: 15px;
     text-align: center;
     font-weight: 600;
     font-size: 12px; }
-  .tickets-list .ticket-item .ticket-title h4 {
+  .chats-list .chat-item .chat-title h4 {
     font-size: 16px;
     font-weight: 700; }
-  .tickets-list .ticket-item .ticket-info {
+  .chats-list .chat-item .chat-info {
     display: flex;
     font-size: 12px;
     font-weight: 500;
     color: #34395e;
     letter-spacing: .5px; }
-    .tickets-list .ticket-item .ticket-info .bullet {
+    .chats-list .chat-item .chat-info .bullet {
       margin: 0 10px; }
 
-.tickets {
+.chats {
   display: flex; }
-  .tickets .ticket-items {
+  .chats .chat-items {
     width: 30%;
     padding-right: 30px; }
-    .tickets .ticket-items .ticket-item {
+    .chats .chat-items .chat-item {
       display: inline-block;
       width: 100%;
       padding: 25px 15px;
       border-bottom: 1px solid #f9f9f9;
       cursor: pointer;
       transition: all .5s; }
-      .tickets .ticket-items .ticket-item:hover {
+      .chats .chat-items .chat-item:hover {
         background-color: rgba(63, 82, 227, 0.03); }
-        .tickets .ticket-items .ticket-item:hover .ticket-title {
+        .chats .chat-items .chat-item:hover .chat-title {
           color: #6777ef; }
-      .tickets .ticket-items .ticket-item.active {
+      .chats .chat-items .chat-item.active {
         box-shadow: 0 2px 6px #acb5f6;
         border-radius: 3px;
         background-color: #6777ef;
         border-bottom: none; }
-        .tickets .ticket-items .ticket-item.active .ticket-title, .tickets .ticket-items .ticket-item.active .ticket-desc {
+        .chats .chat-items .chat-item.active .chat-title, .chats .chat-items .chat-item.active .chat-desc {
           color: #fff !important; }
-      .tickets .ticket-items .ticket-item .ticket-title h4 {
+      .chats .chat-items .chat-item .chat-title h4 {
         font-size: 13px;
         letter-spacing: .3px; }
-        .tickets .ticket-items .ticket-item .ticket-title h4 .badge {
+        .chats .chat-items .chat-item .chat-title h4 .badge {
           padding: 7px 10px;
           margin-left: 5px; }
-      .tickets .ticket-items .ticket-item .ticket-desc {
+      .chats .chat-items .chat-item .chat-desc {
         display: flex;
         font-size: 11px;
         font-weight: 500;
         color: #34395e;
         letter-spacing: .5px; }
-        .tickets .ticket-items .ticket-item .ticket-desc .bullet {
+        .chats .chat-items .chat-item .chat-desc .bullet {
           margin: 0 10px; }
-  .tickets .ticket-content {
+  .chats .chat-content {
     width: 70%; }
-    .tickets .ticket-content .ticket-header {
+    .chats .chat-content .chat-header {
       display: flex; }
-      .tickets .ticket-content .ticket-header .ticket-sender-picture {
+      .chats .chat-content .chat-header .chat-sender-picture {
         width: 50px;
         height: 50px;
         border-radius: 3px;
         overflow: hidden;
         margin-right: 20px; }
-        .tickets .ticket-content .ticket-header .ticket-sender-picture img {
+        .chats .chat-content .chat-header .chat-sender-picture img {
           width: 100%; }
-      .tickets .ticket-content .ticket-header .ticket-detail .ticket-title h4 {
+      .chats .chat-content .chat-header .chat-detail .chat-title h4 {
         font-size: 18px;
         font-weight: 700; }
-      .tickets .ticket-content .ticket-header .ticket-detail .ticket-info {
+      .chats .chat-content .chat-header .chat-detail .chat-info {
         display: flex;
         letter-spacing: .3px;
         font-size: 12px;
         font-weight: 500;
         color: #34395e; }
-        .tickets .ticket-content .ticket-header .ticket-detail .ticket-info .bullet {
+        .chats .chat-content .chat-header .chat-detail .chat-info .bullet {
           margin: 0 10px; }
-  .tickets .ticket-divider {
+  .chats .chat-divider {
     height: 1px;
     width: 100%;
     display: inline-block;
     background-color: #f2f2f2; }
-  .tickets .ticket-description {
+  .chats .chat-description {
     color: #34395e;
     font-weight: 500;
     margin-top: 30px;
     line-height: 28px; }
-    .tickets .ticket-description p {
+    .chats .chat-description p {
       margin-bottom: 20px; }
-    .tickets .ticket-description .ticket-form {
+    .chats .chat-description .chat-form {
       margin-top: 40px; }
-      .tickets .ticket-description .ticket-form .note-editable {
+      .chats .chat-description .chat-form .note-editable {
         color: #34395e;
         font-weight: 500; }
-        .tickets .ticket-description .ticket-form .note-editable p {
+        .chats .chat-description .chat-form .note-editable p {
           margin-bottom: 5px; }
 
 @media (min-width: 576px) and (max-width: 767.98px) {
-  .tickets {
+  .chats {
     display: inline-block; }
-    .tickets .ticket-items {
+    .chats .chat-items {
       width: 100%;
       margin-bottom: 30px;
       padding: 0;
       display: none; }
-    .tickets .ticket-content {
+    .chats .chat-content {
       width: 100%; } }
 
 @media (min-width: 768px) and (max-width: 991.98px) {
-  .tickets {
+  .chats {
     flex-wrap: wrap;
     margin: 0 -15px; }
-    .tickets .ticket-items {
+    .chats .chat-items {
       width: 100%;
       display: flex;
       flex-wrap: nowrap;
@@ -1333,11 +1335,11 @@ tr:first-child > td > .fc-day-grid-event {
       margin-bottom: 15px;
       padding: 15px;
       overflow: auto; }
-      .tickets .ticket-items .ticket-item {
+      .chats .chat-items .chat-item {
         flex-basis: 50%;
         flex-grow: 0;
         flex-shrink: 0; }
-    .tickets .ticket-content {
+    .chats .chat-content {
       margin: 15px;
       width: 100%; } }
 

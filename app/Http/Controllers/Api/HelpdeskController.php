@@ -30,7 +30,7 @@ class HelpdeskController extends Controller
 
     /**
      * POST /api/helpdesk/conversations
-     * Guest creates a new helpdesk ticket.
+     * Guest creates a new helpdesk chat.
      *
      * Request body:
      *   - guest_name    : string (required)
@@ -68,7 +68,7 @@ class HelpdeskController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Ticket created successfully',
+            'message' => 'Chat created successfully',
             'data'    => [
                 'conversation_id' => $conversation->id,
                 'guest_name'      => $conversation->guest_name,

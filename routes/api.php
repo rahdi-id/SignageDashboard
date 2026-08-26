@@ -46,10 +46,10 @@ Route::prefix('helpdesk')->group(function () {
     // List active departments (for Flutter department picker)
     Route::get('/departments', [HelpdeskController::class, 'departments']);
 
-    // Create a new helpdesk ticket (guest submits from TV)
+    // Create a new helpdesk chat (guest submits from TV)
     Route::post('/conversations', [HelpdeskController::class, 'createConversation']);
 
-    // Get conversation detail + messages (guest tracks ticket)
+    // Get chat detail + messages (guest tracks chat)
     Route::get('/conversations/{id}', [HelpdeskController::class, 'showConversation']);
 
     // Guest sends a follow-up message

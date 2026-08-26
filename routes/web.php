@@ -13,6 +13,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\Helpdesk\HelpdeskDashboardController;
 use App\Http\Controllers\Helpdesk\DepartmentController;
 use App\Http\Controllers\Helpdesk\ConversationController;
+use App\Http\Controllers\Helpdesk\GuestHelpdeskController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +29,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [AuthController::class, 'index'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'authenticate']);
+
+// -------------------------------------------------------
+// Guest Helpdesk (no auth required — accessible via QR code)
+// -------------------------------------------------------
+Route::prefix('guest/helpdesk')->name('guest.helpdesk.')->group(function () {
+    Route::get('/',                      [GuestHelpdeskController::class, 'form'])->name('form');
+    Route::post('/start',                [GuestHelpdeskController::class, 'start'])->name('start');
+    Route::get('/chat/{id}',             [GuestHelpdeskController::class, 'chat'])->name('chat');
+    Route::post('/chat/{id}/send',       [GuestHelpdeskController::class, 'send'])->name('send');
+    Route::get('/chat/{id}/messages',    [GuestHelpdeskController::class, 'messages'])->name('messages');
+});
 
 Route::middleware(['auth'])->group(
     function () {
@@ -74,6 +86,7 @@ Route::middleware(['auth'])->group(
 
             // Helpdesk Dashboard
             Route::get('/', [HelpdeskDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/stats', [HelpdeskDashboardController::class, 'stats'])->name('stats');
 
             // Departments
             Route::get('/departments/data', [DepartmentController::class, 'data'])->name('departments.data');
@@ -82,6 +95,9 @@ Route::middleware(['auth'])->group(
             // Conversations
             Route::get('/conversations/data', [ConversationController::class, 'data'])->name('conversations.data');
             Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+
+            // AJAX polling messages — HARUS sebelum /conversations/{id}
+            Route::get('/conversations/{id}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');
             Route::get('/conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
             Route::post('/conversations/{id}/reply', [ConversationController::class, 'reply'])->name('conversations.reply');
             Route::patch('/conversations/{id}/close', [ConversationController::class, 'close'])->name('conversations.close');

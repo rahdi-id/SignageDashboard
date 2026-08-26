@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Department;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class ConversationController extends Controller
 {
@@ -45,12 +46,25 @@ class ConversationController extends Controller
 
         $conversations = $query->latest()->get();
 
+        // Hitung unread per conversation: pesan guest yang belum dibaca admin
+        $conversations->loadCount([
+            'messages as unread_count' => function ($q) {
+                $q->where('sender_type', 'guest')->where('is_read', false);
+            },
+        ]);
+
         return response()->json(['data' => $conversations]);
     }
 
     public function show($id)
     {
         $conversation = Conversation::with(['department', 'messages'])->findOrFail($id);
+
+        // Tandai semua pesan Guest pada conversation ini sebagai sudah dibaca
+        Message::where('conversation_id', $id)
+            ->where('sender_type', 'guest')
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
         return view('helpdesk.conversations.show', [
             'title'        => 'Conversation Detail',
@@ -61,9 +75,15 @@ class ConversationController extends Controller
     public function reply(Request $request, $id)
     {
         $request->validate([
-            'message'    => 'required|string',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
+            // message boleh kosong jika ada attachment, tapi salah satu harus ada
+            'message'    => 'nullable|string|max:5000',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx|max:5120',
         ]);
+
+        // Pastikan minimal pesan teks atau file attachment ada
+        if (empty($request->input('message')) && !$request->hasFile('attachment')) {
+            return back()->withErrors(['message' => 'Please enter a message or attach a file.']);
+        }
 
         $conversation = Conversation::findOrFail($id);
 
@@ -71,13 +91,14 @@ class ConversationController extends Controller
         if ($request->hasFile('attachment')) {
             $file           = $request->file('attachment');
             $attachmentName = rand(1, 9999) . time() . '.' . $file->getClientOriginalExtension();
+            File::ensureDirectoryExists(public_path('images/helpdesk'));
             $file->move(public_path('images/helpdesk'), $attachmentName);
         }
 
         Message::create([
             'conversation_id' => $conversation->id,
             'sender_type'     => 'admin',
-            'message'         => $request->message,
+            'message'         => $request->input('message') ?? '',
             'attachment'      => $attachmentName,
         ]);
 
@@ -106,5 +127,30 @@ class ConversationController extends Controller
 
         return redirect()->route('helpdesk.conversations.show', $id)
             ->withSuccess('Conversation reopened successfully.');
+    }
+
+    public function messages($id)
+    {
+        $conversation = Conversation::with('messages')->findOrFail($id);
+
+        // Heartbeat: catat waktu admin terakhir aktif
+        $conversation->update(['admin_last_seen_at' => now()]);
+
+        return response()->json([
+            'status'              => $conversation->status,
+            'messages'            => $conversation->messages->map(function ($message) {
+                return [
+                    'id'          => $message->id,
+                    'sender_type' => $message->sender_type,
+                    'message'     => $message->message,
+                    'attachment'  => $message->attachment,
+                    'created_at'  => $message->created_at->format('d M Y H:i'),
+                ];
+            }),
+            // Kirim timestamp guest agar admin bisa tampilkan status guest
+            'guest_last_seen_at'  => $conversation->guest_last_seen_at
+                ? $conversation->guest_last_seen_at->toIso8601String()
+                : null,
+        ]);
     }
 }
